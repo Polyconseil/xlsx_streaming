@@ -1,0 +1,13 @@
+include README.rst
+include CHANGELOG.rst
+include LICENSE
+
+graft xlsx_streaming
+
+prune docs
+prune tests
+
+exclude Makefile
+exclude release.conf
+
+global-exclude *.py[cod] __pycache__ *.so *.DS_Store .*.swp *.*~
