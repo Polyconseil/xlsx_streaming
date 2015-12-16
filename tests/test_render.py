@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import unittest
 from xml.etree import ElementTree as ETree
 
+from xlsx_streaming import compat
 from xlsx_streaming import render
 
 from .utils import gen_xlsx_sheet
@@ -14,7 +15,7 @@ class TestOpenXML(unittest.TestCase):
     def test_rm_namespace(self):
         element = ETree.fromstring(gen_xlsx_sheet())
         render.rm_namespace(element)
-        element_iter = element.iter()
+        element_iter = compat.itertree(element)
         self.assertEqual(next(element_iter).tag, 'worksheet')
         self.assertEqual(next(element_iter).tag, 'sheetPr')
         self.assertEqual(next(element_iter).tag, 'outlinePr')
@@ -24,7 +25,7 @@ class TestOpenXML(unittest.TestCase):
         self.assertTrue(header is None)
         self.assertEqual(template.tag, 'row')
         self.assertEqual(template.get('r'), '1')
-        element_iter = template.iter()
+        element_iter = compat.itertree(template)
         next(element_iter)
         child = next(element_iter)
         self.assertEqual(child.tag, 'c')
@@ -71,7 +72,7 @@ class TestOpenXML(unittest.TestCase):
         render.update_cell(cell, line=2, value='Updated')
         self.assertEqual(cell.get('r'), 'C2')
         self.assertEqual(cell.get('t'), 'inlineStr')
-        element_iter = cell.iter()
+        element_iter = compat.itertree(cell)
         next(element_iter)
         self.assertEqual(next(element_iter).tag, 'is')
         child = next(element_iter)
@@ -134,7 +135,7 @@ class TestOpenXML(unittest.TestCase):
         document += stream
         self.assertTrue(stream.startswith(b' </sheetData'))
 
-        tree_iter = ETree.fromstring(document).iter()
+        tree_iter = compat.itertree(ETree.fromstring(document))
         self.assertEqual(next(tree_iter).tag, '{%s}worksheet' % render.OPENXML_NS)
         self.assertEqual(next(tree_iter).tag, '{%s}sheetData' % render.OPENXML_NS)
         self.assertEqual(next(tree_iter).tag, '{%s}row' % render.OPENXML_NS)

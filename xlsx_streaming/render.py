@@ -6,7 +6,7 @@ import datetime
 import re
 from xml.etree import ElementTree as ETree
 
-from .compat import text_type
+from . import compat
 
 OPENXML_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 OPENXML_NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
@@ -81,7 +81,7 @@ def datetime_to_excel_datetime(dt_obj, date_1904=False):
 
 def rm_namespace(xml_element):
     """Remove namespace in the ``xml_element`` and all of its children."""
-    for el in xml_element.iter():
+    for el in compat.itertree(xml_element):
         if '}' in el.tag:
             el.tag = el.tag.split('}', 1)[1]  # strip all namespaces
 
@@ -126,7 +126,7 @@ def get_header_and_row_template(openxml_sheet):
 def _update_boolean_cell(cell, value):
     if value is not None and not isinstance(value, bool):
         raise AttributeError("expected a boolean got %s.", value)
-    next(child for child in cell if child.tag == 'v').text = '' if value is None else text_type(int(value))
+    next(child for child in cell if child.tag == 'v').text = '' if value is None else compat.text_type(int(value))
 
 
 def _update_numeric_cell(cell, value):
@@ -134,9 +134,9 @@ def _update_numeric_cell(cell, value):
         cell_text = ''
     else:
         try:
-            cell_text = text_type(datetime_to_excel_datetime(value))
+            cell_text = compat.text_type(datetime_to_excel_datetime(value))
         except TypeError:
-            cell_text = text_type(value)
+            cell_text = compat.text_type(value)
         try:
             float(cell_text)
         except:
@@ -151,7 +151,8 @@ def _update_text_cell(cell, value):
         cell.clear()
         cell.set('t', 'inlineStr')
         ETree.SubElement(ETree.SubElement(cell, 'is'), 't')
-    next(child for child in cell.iter() if child.tag == 't').text = '' if value is None else text_type(value)
+    updated_text = '' if value is None else compat.text_type(value)
+    next(child for child in compat.itertree(cell) if child.tag == 't').text = updated_text
 
 
 def update_cell(cell, line, value):
@@ -174,7 +175,7 @@ def update_cell(cell, line, value):
     except Exception as e:
         args = e.args or ['']
         arg0 = "column '%s', line '%s': %s" % (column, line, args[0])
-        e.args = (arg0,) + args[1:]
+        e.args = (arg0,) + tuple(args[1:])
         raise
     cell.set('r', '%s%s' % (column, line))
 
@@ -196,7 +197,7 @@ def render_row(row_values, row_template, line, encoding='utf-8'):
 
     for value, cell_template in zip(row_values, cells):
         update_cell(cell_template, line, value)
-    row_template.set('r', text_type(line))
+    row_template.set('r', compat.text_type(line))
     return ETree.tostring(row_template, encoding=encoding)
 
 

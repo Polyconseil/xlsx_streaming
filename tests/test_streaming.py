@@ -13,6 +13,13 @@ from xlsx_streaming import streaming
 
 from .utils import gen_xlsx_template
 
+def lists_equal(list_left, list_right):
+    # TestCase.assertListEqual is not available with python 2.6
+    for left, right in zip(list_left, list_right):
+        if left != right:
+            return False
+    return True
+
 class TestStreaming(unittest.TestCase):
     def test_serialize_queryset_by_batch(self):
         queryset = [list(range(10 * i, 10 * (i + 1))) for i in range(27)]
@@ -20,12 +27,12 @@ class TestStreaming(unittest.TestCase):
 
         batch = next(gen)
         self.assertEqual(len(batch), 10)
-        self.assertListEqual(batch[0], list(range(10)))
-        self.assertListEqual(batch[1], list(range(10, 20)))
+        self.assertTrue(lists_equal(batch[0], list(range(10))))
+        self.assertTrue(lists_equal(batch[1], list(range(10, 20))))
 
         batch = next(gen)
         self.assertEqual(len(batch), 10)
-        self.assertListEqual(batch[0], list(range(100, 110)))
+        self.assertTrue(lists_equal(batch[0], list(range(100, 110))))
 
         batch = next(gen)
         self.assertEqual(len(batch), 7)
