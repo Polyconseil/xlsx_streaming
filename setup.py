@@ -41,7 +41,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
@@ -51,7 +51,7 @@ setup(
     author='Polyconseil',
     author_email='opensource+%s@polyconseil.fr' % PACKAGE,
     url='https://github.com/Polyconseil/%s/' % PACKAGE,
-    license='BSD',
+    license='GNU GPLv3',
     packages=find_packages(exclude=['docs', 'tests']),
     setup_requires=[
         'setuptools',
