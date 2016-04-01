@@ -3,10 +3,15 @@
 from __future__ import unicode_literals
 
 import datetime
+import logging
 import re
 from xml.etree import ElementTree as ETree
 
 from . import compat
+
+
+logger = logging.getLogger(__name__)
+
 
 OPENXML_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 OPENXML_NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
@@ -174,9 +179,8 @@ def update_cell(cell, line, value):
         update_function(cell, value)
     except Exception as e:
         args = e.args or ['']
-        arg0 = "column '%s', line '%s': %s" % (column, line, args[0])
-        e.args = (arg0,) + tuple(args[1:])
-        raise
+        msg = "(column '%s', line '%s') data does not match template: %s" % (column, line, args[0])
+        logger.debug(msg)
     cell.set('r', '%s%s' % (column, line))
 
 
