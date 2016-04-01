@@ -30,6 +30,133 @@ def _timezone_helper():
 get_export_timezone, set_export_timezone = _timezone_helper()
 
 
+def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
+    """
+        Render a collection of row batches to open xml.
+
+        args:
+            rows_batches (iterable): each element is a list of lists containing the row values
+            openxml_sheet_string (str): a template for the final sheet containing the header and an example row
+    """
+    header = (
+        '<worksheet xmlns="{ns}" xmlns:r="{ns_r}">\n'
+        ' <sheetData>\n'
+        .format(ns=OPENXML_NS, ns_r=OPENXML_NS_R)
+    ).encode(encoding)
+    footer = (
+        ' </sheetData>\n'
+        '</worksheet>\n'
+    ).encode(encoding)
+
+    yield header
+    current_line = 1
+    header_tree, row_template = get_header_and_row_template(openxml_sheet_string)  # pylint: disable=unbalanced-tuple-unpacking
+    if header_tree is not None:
+        yield ETree.tostring(header_tree, encoding=encoding)
+        current_line += 1
+    for rows in rows_batches:
+        yield render_rows(rows, row_template, start_line=current_line, encoding=encoding)
+        current_line += len(rows)
+    yield footer
+
+
+def render_rows(rows, row_template, start_line, encoding='utf-8'):
+    """
+        Return a collection of open xml rows as bytes.
+
+        The output is a byte string like:
+
+            <row r='2'>…</row>
+            <row r='3'>…</row>
+            …
+
+        args:
+            rows (list): a list of list containing the row values
+            row_template (xml.ElementTree): a template used for each row
+            start_line (int): the line of the first row in the returned xml
+
+        ..note: This function updates row_template each time it is called.
+    """
+    return b'\n'.join(render_row(row, row_template, start_line + i, encoding) for i, row in enumerate(rows))
+
+
+def render_row(row_values, row_template, line, encoding='utf-8'):
+    """
+        Return an openxml row as bytes using row_template as a model, and row_values for the values.
+
+        args:
+            row_values (list): the list of values to update the row
+            row_template (xml.ElementTree): a template for the current row
+            line (int): the line of the current row
+
+        ..note: This function updates row_template each time it is called.
+    """
+    cells = list(row_template)
+    if len(cells) != len(row_values):
+        raise AttributeError('``len(row_values)`` do not match the number of cells in ``row_template``')
+
+    for value, cell_template in zip(row_values, cells):
+        update_cell(cell_template, line, value)
+    row_template.set('r', compat.text_type(line))
+    return ETree.tostring(row_template, encoding=encoding)
+
+
+def update_cell(cell, line, value):
+    """
+        Update cell with a new line and a new value.
+
+        The value must be compatible with the cell type (numeric, boolean or text).
+        The function raises if this is not the case.
+        Updating a cell with a None value sets cell.text to the empty string.
+    """
+    column = get_column(cell)
+    cell_type = cell.attrib.get('t', 'n')
+    update_function = {
+        'n': _update_numeric_cell,
+        'b': _update_boolean_cell,
+    }.get(cell_type, _update_text_cell)
+
+    try:
+        update_function(cell, value)
+    except Exception as e:
+        args = e.args or ['']
+        msg = "(column '%s', line '%s') data does not match template: %s" % (column, line, args[0])
+        logger.debug(msg)
+    cell.set('r', '%s%s' % (column, line))
+
+
+def _update_boolean_cell(cell, value):
+    if value is not None and not isinstance(value, bool):
+        raise AttributeError("expected a boolean got %s.", value)
+    next(child for child in cell if child.tag == 'v').text = '' if value is None else compat.text_type(int(value))
+
+
+def _update_numeric_cell(cell, value):
+    if value is None:
+        cell_text = ''
+    else:
+        try:
+            cell_text = compat.text_type(datetime_to_excel_datetime(value))
+        except TypeError:
+            cell_text = compat.text_type(value)
+        try:
+            float(cell_text)
+        except:
+            raise AttributeError("expected a numeric or date like value got %s.", cell_text)
+    next(child for child in cell if child.tag == 'v').text = cell_text
+
+
+def _update_text_cell(cell, value):
+    if cell.get('t') != 'inlineStr':
+        # write all the strings 'inline' to avoid messing up with
+        # a string reference file in the final xlsx file
+        cell.clear()
+        cell.set('t', 'inlineStr')
+        ETree.SubElement(ETree.SubElement(cell, 'is'), 't')
+    updated_text = '' if value is None else compat.text_type(value)
+    next(child for child in compat.itertree(cell) if child.tag == 't').text = updated_text
+
+
 def datetime_to_excel_datetime(dt_obj, date_1904=False):
     # Convert a datetime object to an Excel serial date and time. The integer
     # part of the number stores the number of days since the epoch and the
@@ -113,9 +240,9 @@ def get_header_and_row_template(openxml_sheet):
     """
     tree = ETree.fromstring(openxml_sheet)
     rm_namespace(tree)
-    sheetData = next(child for child in tree if child.tag == 'sheetData')
+    sheet_data = next(child for child in tree if child.tag == 'sheetData')
     header_and_row_template = []
-    for child in sheetData:
+    for child in sheet_data:
         if child.tag == 'row':
             header_and_row_template.append(child)
         if len(header_and_row_template) > 1:
@@ -126,130 +253,3 @@ def get_header_and_row_template(openxml_sheet):
     else:
         header_and_row_template = [None] + header_and_row_template
     return tuple(header_and_row_template)
-
-
-def _update_boolean_cell(cell, value):
-    if value is not None and not isinstance(value, bool):
-        raise AttributeError("expected a boolean got %s.", value)
-    next(child for child in cell if child.tag == 'v').text = '' if value is None else compat.text_type(int(value))
-
-
-def _update_numeric_cell(cell, value):
-    if value is None:
-        cell_text = ''
-    else:
-        try:
-            cell_text = compat.text_type(datetime_to_excel_datetime(value))
-        except TypeError:
-            cell_text = compat.text_type(value)
-        try:
-            float(cell_text)
-        except:
-            raise AttributeError("expected a numeric or date like value got %s.", cell_text)
-    next(child for child in cell if child.tag == 'v').text = cell_text
-
-
-def _update_text_cell(cell, value):
-    if cell.get('t') != 'inlineStr':
-        # write all the strings 'inline' to avoid messing up with
-        # a string reference file in the final xlsx file
-        cell.clear()
-        cell.set('t', 'inlineStr')
-        ETree.SubElement(ETree.SubElement(cell, 'is'), 't')
-    updated_text = '' if value is None else compat.text_type(value)
-    next(child for child in compat.itertree(cell) if child.tag == 't').text = updated_text
-
-
-def update_cell(cell, line, value):
-    """
-        Update cell with a new line and a new value.
-
-        The value must be compatible with the cell type (numeric, boolean or text).
-        The function raises if this is not the case.
-        Updating a cell with a None value sets cell.text to the empty string.
-    """
-    column = get_column(cell)
-    cell_type = cell.attrib.get('t', 'n')
-    update_function = {
-        'n': _update_numeric_cell,
-        'b': _update_boolean_cell,
-    }.get(cell_type, _update_text_cell)
-
-    try:
-        update_function(cell, value)
-    except Exception as e:
-        args = e.args or ['']
-        msg = "(column '%s', line '%s') data does not match template: %s" % (column, line, args[0])
-        logger.debug(msg)
-    cell.set('r', '%s%s' % (column, line))
-
-
-def render_row(row_values, row_template, line, encoding='utf-8'):
-    """
-        Return an openxml row as bytes using row_template as a model, and row_values for the values.
-
-        args:
-            row_values (list): the list of values to update the row
-            row_template (xml.ElementTree): a template for the current row
-            line (int): the line of the current row
-
-        ..note: This function updates row_template each time it is called.
-    """
-    cells = list(row_template)
-    if len(cells) != len(row_values):
-        raise AttributeError('``len(row_values)`` do not match the number of cells in ``row_template``')
-
-    for value, cell_template in zip(row_values, cells):
-        update_cell(cell_template, line, value)
-    row_template.set('r', compat.text_type(line))
-    return ETree.tostring(row_template, encoding=encoding)
-
-
-def render_rows(rows, row_template, start_line, encoding='utf-8'):
-    """
-        Return a collection of open xml rows as bytes.
-
-        The output is a byte string like:
-
-            <row r='2'>…</row>
-            <row r='3'>…</row>
-            …
-
-        args:
-            rows (list): a list of list containing the row values
-            row_template (xml.ElementTree): a template used for each row
-            start_line (int): the line of the first row in the returned xml
-
-        ..note: This function updates row_template each time it is called.
-    """
-    return b'\n'.join(render_row(row, row_template, start_line + i, encoding) for i, row in enumerate(rows))
-
-
-def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
-    """
-        Render a collection of row batches to open xml.
-
-        args:
-            rows_batches (iterable): each element is a list of lists containing the row values
-            openxml_sheet_string (str): a template for the final sheet containing the header and an example row
-    """
-    header = (
-        '<worksheet xmlns="{ns}" xmlns:r="{ns_r}">\n'
-        ' <sheetData>\n'
-        .format(ns=OPENXML_NS, ns_r=OPENXML_NS_R)
-    ).encode(encoding)
-    footer = (
-        ' </sheetData>\n'
-        '</worksheet>\n'
-    ).encode(encoding)
-
-    yield header
-    current_line = 1
-    header_tree, row_template = get_header_and_row_template(openxml_sheet_string)  # pylint: disable=unbalanced-tuple-unpacking
-    if header_tree is not None:
-        yield ETree.tostring(header_tree, encoding=encoding)
-        current_line += 1
-    for rows in rows_batches:
-        yield render_rows(rows, row_template, start_line=current_line, encoding=encoding)
-        current_line += len(rows)
-    yield footer
