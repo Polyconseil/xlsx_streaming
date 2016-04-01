@@ -10,12 +10,12 @@ xlsx_streaming
 
 Bug reports, patches and suggestions welcome! Just open an issue_ or send a `pull request`_.
 
-tests
------
+Running the tests
+-----------------
 
-After having installed the development requirements, just run::
+As simple as::
 
-    python -m unittest discover
+    python setup.py test
 
 .. _issue: https://github.com/sebdiem/xlsx_streaming/issues/new
 .. _pull request: https://github.com/sebdiem/xlsx_streaming/compare/
