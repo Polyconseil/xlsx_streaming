@@ -77,7 +77,7 @@ def render_rows(rows, row_template, start_line, encoding='utf-8'):
 
         ..note: This function updates row_template each time it is called.
     """
-    return b'\n'.join(render_row(row, row_template, start_line + i, encoding) for i, row in enumerate(rows))
+    return b'\n'.join(render_row(row, row_template, i, encoding) for i, row in enumerate(rows, start_line))
 
 
 def render_row(row_values, row_template, line, encoding='utf-8'):
@@ -91,9 +91,16 @@ def render_row(row_values, row_template, line, encoding='utf-8'):
 
         ..note: This function updates row_template each time it is called.
     """
+    reset_memory = line < 3  # with a header, the first call to render_row can be with line = 2
+    row_template = row_template or get_default_template(row_values, reset_memory)
     cells = list(row_template)
     if len(cells) != len(row_values):
-        raise AttributeError('``len(row_values)`` do not match the number of cells in ``row_template``')
+        logger.debug(
+            '``len(row_values)`` do not match the number of cells in ``row_template``. '
+            'Ignoring template (all cells will be stored as text).'
+        )
+        row_template = get_default_template(row_values, reset_memory)
+        cells = list(row_template)
 
     for value, cell_template in zip(row_values, cells):
         update_cell(cell_template, line, value)
@@ -158,10 +165,12 @@ def _update_text_cell(cell, value):
 
 
 def datetime_to_excel_datetime(dt_obj, date_1904=False):
-    # Convert a datetime object to an Excel serial date and time. The integer
-    # part of the number stores the number of days since the epoch and the
-    # fractional part stores the percentage of the day.
-    # Taken from https://github.com/jmcnamara/XlsxWriter
+    """
+        Convert a datetime object to an Excel serial date and time. The integer
+        part of the number stores the number of days since the epoch and the
+        fractional part stores the percentage of the day.
+        Credits: Taken from https://github.com/jmcnamara/XlsxWriter
+    """
 
     if date_1904:
         # Excel for Mac date epoch.
@@ -231,6 +240,30 @@ def get_column(cell):
     return match.group(1)
 
 
+def _get_column_letter(col_idx):
+    """Convert a column number into a column letter (3 -> 'C')
+
+    Right shift the column col_idx by 26 to find column letters in reverse
+    order.  These numbers are 1-based, and can be converted to ASCII
+    ordinals by adding 64.
+
+    Credits: openpyxl library
+    """
+    # these indicies corrospond to A -> ZZZ and include all allowed
+    # columns
+    if not 1 <= col_idx <= 18278:
+        raise ValueError("Invalid column index {0}".format(col_idx))
+    letters = []
+    while col_idx > 0:
+        col_idx, remainder = divmod(col_idx, 26)
+        # check for exact division and borrow if needed
+        if remainder == 0:
+            remainder = 26
+            col_idx -= 1
+        letters.append(chr(remainder+64))
+    return ''.join(reversed(letters))
+
+
 def get_header_and_row_template(openxml_sheet):
     """
         Extract the header (potentially None) and the first row from openxml_sheet
@@ -245,11 +278,38 @@ def get_header_and_row_template(openxml_sheet):
     for child in sheet_data:
         if child.tag == 'row':
             header_and_row_template.append(child)
-        if len(header_and_row_template) > 1:
+        if len(header_and_row_template) == 2:
             header, row = header_and_row_template  # pylint: disable=unbalanced-tuple-unpacking
-            error_msg = 'Header and row template do not have the same number of cells'
-            assert count_cells(header) == count_cells(row), error_msg
+            if count_cells(header) != count_cells(row):
+                logger.debug(
+                    'Header and row template do not have the same number of cells. '
+                    'Ignoring template (all cells will be stored as text).'
+                )
+                header_and_row_template = [None, None]
             break
     else:
-        header_and_row_template = [None] + header_and_row_template
+        header_and_row_template = [None] + (header_and_row_template or [None])
     return tuple(header_and_row_template)
+
+
+def get_default_template(row_values, reset_memory=False):
+    """
+        Return the default template row.
+        It has only text cells, and as many columns as in row_values.
+    """
+    get_default_template._memoized = [] if reset_memory else (getattr(get_default_template, '_memoized', None) or [])
+    if get_default_template._memoized:
+        return get_default_template._memoized[0]
+
+    root = ETree.Element('row', {'r': '1'})
+    for i, value in enumerate(row_values, 1):
+        el_t = ETree.Element('t')
+        el_t.text = 'Default'
+        el_is = ETree.Element('is')
+        el_is.append(el_t)
+        cell = ETree.Element('c', {'r': '%s%s' % (_get_column_letter(i), 1), 't': 'inlineStr'})
+        cell.append(el_is)
+        root.append(cell)
+
+    get_default_template._memoized.append(root)
+    return root

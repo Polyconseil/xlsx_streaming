@@ -23,4 +23,5 @@ def gen_xlsx_template(with_header=False):
 def gen_xlsx_sheet(with_header=False):
     xlsx_template = gen_xlsx_template(with_header=with_header)
     zip_template = zipfile.ZipFile(xlsx_template, mode='r')
-    return zip_template.read(streaming.TEMPLATE_SHEET_NAME).decode('utf-8')
+    sheet_name = streaming.get_first_sheet_name(zip_template)
+    return zip_template.read(sheet_name).decode('utf-8')

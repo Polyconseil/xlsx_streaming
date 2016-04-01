@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import io
 import os
 import tempfile
 import unittest
@@ -82,3 +83,17 @@ class TestStreaming(unittest.TestCase):
         self.assertEqual(new_wb.active.cell(row=3, column=3).value, datetime.datetime(1900, 1, 1, 4, 48))
         self.assertEqual(new_wb.active.cell(row=28, column=3).value, datetime.datetime(1900, 1, 1, 2, 24))
         os.remove(f.name)
+
+    def test_wrong_template(self):
+        template = io.BytesIO()
+        queryset = [list(range(10)) for i in range(8)]
+        stream = streaming.stream_queryset_as_xlsx(queryset, xlsx_template=template, batch_size=10)
+
+        f = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
+        for chunk in stream:
+            f.write(chunk)
+        f.close()
+
+        new_wb = openpyxl.load_workbook(filename=f.name)
+        for row in new_wb.active.rows:
+            self.assertEqual([c.value for c in row], [str(i) for i in range(10)])

@@ -2,13 +2,18 @@
 
 from __future__ import unicode_literals
 
+import logging
 import zipfile
 
 import zipstream
 
 from . import render
+from .xlsx_template import DEFAULT_TEMPLATE
 
-TEMPLATE_SHEET_NAME = 'xl/worksheets/sheet1.xml'
+
+logger = logging.getLogger(__name__)
+
+EXCEL_WORKSHEETS_PATH = 'xl/worksheets/'
 
 
 def serialize_queryset_by_batch(qs, serializer, batch_size):
@@ -50,7 +55,7 @@ def zip_to_zipstream(zip_file, only=None, exclude=None):
 
 def stream_queryset_as_xlsx(
         qs,
-        xlsx_template,
+        xlsx_template=None,
         serializer=None,
         batch_size=1000,
         encoding='utf-8',
@@ -65,7 +70,8 @@ def stream_queryset_as_xlsx(
         args:
             qs (iterable): an iterable containing the rows (typically a Django queryset)
             xlsx_template (file like): an in memory xlsx file template containing
-                the header (optional) and the first row
+                the header (optional) and the first row used to infer data types for each column.
+                If not provided, all cells will be formatted as text.
             serializer (function): a function applied to each batch of rows to transform them before saving
                 them to the xlsx document (defaults to identity)
             batch_size (int): the size of each batch of rows
@@ -73,12 +79,22 @@ def stream_queryset_as_xlsx(
     ..note: If the xlsx template contains more than one row, the first row is kept as is in the final
         xlsx file (header row), and the second one is used as a template for all the generated rows.
     """
-    sheet_name = TEMPLATE_SHEET_NAME
     serializer = serializer or (lambda x: x)
 
     batches = serialize_queryset_by_batch(qs, serializer=serializer, batch_size=batch_size)
 
-    zip_template = zipfile.ZipFile(xlsx_template, mode='r')
+    try:
+        zip_template = zipfile.ZipFile(xlsx_template, mode='r')
+    except:
+        logger.debug('Template is not a valid Excel file, ignoring it. Every cell will be saved as text.')
+        zip_template = zipfile.ZipFile(DEFAULT_TEMPLATE, mode='r')
+
+    sheet_name = get_first_sheet_name(zip_template)
+    if sheet_name is None:
+        logger.debug('Template is not a valid Excel file, ignoring it. Every cell will be saved as text.')
+        zip_template = zipfile.ZipFile(DEFAULT_TEMPLATE, mode='r')
+        sheet_name = get_first_sheet_name(zip_template)
+
     xlsx_sheet_string = zip_template.read(sheet_name).decode(encoding)
 
     zipped_stream = zip_to_zipstream(zip_template, exclude=[sheet_name])
@@ -91,3 +107,10 @@ def stream_queryset_as_xlsx(
     )
 
     return zipped_stream
+
+
+def get_first_sheet_name(xlsx_zipfile):
+    try:
+        return next(path for path in xlsx_zipfile.namelist() if path.startswith(EXCEL_WORKSHEETS_PATH))
+    except StopIteration:
+        return None

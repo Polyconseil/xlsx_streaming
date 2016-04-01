@@ -104,6 +104,33 @@ class TestOpenXML(unittest.TestCase):
             '</row>'.encode('utf-8')
         )
 
+    def test_render_row_wrong_template(self):
+        template_row = self.gen_row()
+        row = render.render_row([42, 'Noé!>', 24, 'NoTemplateElement'], template_row, 1)
+        ETree.fromstring(row)
+        self.assertEqual(
+            row,
+            '<row r="1">'
+            '<c r="A1" t="inlineStr"><is><t>42</t></is></c>'
+            '<c r="B1" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
+            '<c r="C1" t="inlineStr"><is><t>24</t></is></c>'
+            '<c r="D1" t="inlineStr"><is><t>NoTemplateElement</t></is></c>'
+            '</row>'.encode('utf-8')
+        )
+
+    def test_render_row_null_template(self):
+        template_row = None
+        row = render.render_row([42, 'Noé!>', 24], template_row, 2)
+        ETree.fromstring(row)
+        self.assertEqual(
+            row,
+            '<row r="2">'
+            '<c r="A2" t="inlineStr"><is><t>42</t></is></c>'
+            '<c r="B2" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
+            '<c r="C2" t="inlineStr"><is><t>24</t></is></c>'
+            '</row>'.encode('utf-8')
+        )
+
     def test_render_rows(self):
         template_row = self.gen_row()
         rows = render.render_rows([[42, 'Noé!>', 24], [18, '<éON', 21]], template_row, 1)
