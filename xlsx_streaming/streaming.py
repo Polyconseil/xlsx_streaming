@@ -16,43 +16,6 @@ logger = logging.getLogger(__name__)
 EXCEL_WORKSHEETS_PATH = 'xl/worksheets/'
 
 
-def serialize_queryset_by_batch(qs, serializer, batch_size):
-    start, last_batch = 0, []
-    while start == 0 or len(last_batch) == batch_size:
-        last_batch = list(qs[start:start + batch_size])  # force queryset evaluation
-        yield serializer(last_batch)
-        start += batch_size
-
-
-def zip_to_zipstream(zip_file, only=None, exclude=None):
-    """
-    args:
-        zip_file (ZipFile): the original zipfile.ZipFile
-        only (list): the file names of the files to be included in the stream
-        exclude (list): the file names of the files to be excluded in the stream
-        ..note: only and exclude cannot be used at the same time
-    """
-    only = only or []
-    exclude = exclude or []
-    if only and exclude:
-        raise AttributeError('`only` and `exclude` cannot be used at the same time')
-
-    file_names = zip_file.namelist()
-    if only:
-        file_names = [name for name in file_names if name in only]
-    elif exclude:
-        file_names = [name for name in file_names if name not in exclude]
-
-    zip_stream = zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED)
-    for file_name in file_names:
-        zip_stream.write_iter(
-            arcname=file_name,
-            iterable=iter([zip_file.read(file_name)]),
-            compress_type=zipstream.ZIP_DEFLATED,
-        )
-    return zip_stream
-
-
 def stream_queryset_as_xlsx(
         qs,
         xlsx_template=None,
@@ -107,6 +70,43 @@ def stream_queryset_as_xlsx(
     )
 
     return zipped_stream
+
+
+def serialize_queryset_by_batch(qs, serializer, batch_size):
+    start, last_batch = 0, []
+    while start == 0 or len(last_batch) == batch_size:
+        last_batch = list(qs[start:start + batch_size])  # force queryset evaluation
+        yield serializer(last_batch)
+        start += batch_size
+
+
+def zip_to_zipstream(zip_file, only=None, exclude=None):
+    """
+    args:
+        zip_file (ZipFile): the original zipfile.ZipFile
+        only (list): the file names of the files to be included in the stream
+        exclude (list): the file names of the files to be excluded in the stream
+        ..note: only and exclude cannot be used at the same time
+    """
+    only = only or []
+    exclude = exclude or []
+    if only and exclude:
+        raise AttributeError('`only` and `exclude` cannot be used at the same time')
+
+    file_names = zip_file.namelist()
+    if only:
+        file_names = [name for name in file_names if name in only]
+    elif exclude:
+        file_names = [name for name in file_names if name not in exclude]
+
+    zip_stream = zipstream.ZipFile(mode='w', compression=zipstream.ZIP_DEFLATED)
+    for file_name in file_names:
+        zip_stream.write_iter(
+            arcname=file_name,
+            iterable=iter([zip_file.read(file_name)]),
+            compress_type=zipstream.ZIP_DEFLATED,
+        )
+    return zip_stream
 
 
 def get_first_sheet_name(xlsx_zipfile):
