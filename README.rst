@@ -17,5 +17,5 @@ As simple as::
 
     python setup.py test
 
-.. _issue: https://github.com/sebdiem/xlsx_streaming/issues/new
-.. _pull request: https://github.com/sebdiem/xlsx_streaming/compare/
+.. _issue: https://github.com/Polyconseil/xlsx_streaming/issues/new
+.. _pull request: https://github.com/Polyconseil/xlsx_streaming/compare/
