@@ -297,12 +297,12 @@ def get_default_template(row_values, reset_memory=False):
         Return the default template row.
         It has only text cells, and as many columns as in row_values.
     """
-    get_default_template._memoized = [] if reset_memory else (getattr(get_default_template, '_memoized', None) or [])
+    get_default_template._memoized = [] if reset_memory else getattr(get_default_template, '_memoized', [])
     if get_default_template._memoized:
         return get_default_template._memoized[0]
 
     root = ETree.Element('row', {'r': '1'})
-    for i, value in enumerate(row_values, 1):
+    for i in range(1, len(row_values) + 1):
         el_t = ETree.Element('t')
         el_t.text = 'Default'
         el_is = ETree.Element('is')
