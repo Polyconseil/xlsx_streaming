@@ -1,3 +1,6 @@
+0.3.0 (2016-04-03)
+------------------
+
 * It is now possible to stream data to an Excel document without providing
   a template. In this case all cells are formatted as text (no date or number
   formatting). If there is an error with the template provided by the user,
