@@ -92,7 +92,8 @@ def render_row(row_values, row_template, line, encoding='utf-8'):
         ..note: This function updates row_template each time it is called.
     """
     reset_memory = line < 3  # with a header, the first call to render_row can be with line = 2
-    row_template = row_template or get_default_template(row_values, reset_memory)
+    if row_template is None:
+        row_template = get_default_template(row_values, reset_memory)
     cells = list(row_template)
     if len(cells) != len(row_values):
         logger.debug(
