@@ -32,8 +32,19 @@ Django example
         response['Content-Disposition'] = 'attachment; filename=test.xlsx'
         return response
 
-With this kind of code, your database will not be hit too hard by the file export, even when the export's size is several dozens of megabytes.
-Like in the example above, you can use a static template, but you can also generate the template dynamically using the python excel library of your choice (`openpyxl`_, …).
+With this kind of code, your database will not be hit too hard by the file
+export, even when the export's size is several dozens of megabytes.
+
+To include type information (for dates, numbers, …) in the generated Excel
+file, ``xlsx_streaming`` uses a user-provided template file containing example
+data whose column types match those of the exported data. Like in the example
+above, you can use a static template, but you can also generate the template
+dynamically using the python excel library of your choice (`openpyxl`_, …). The
+template must be a valid Excel file with at least one row. If the template
+contains only one row, this row cell's datatypes are used as datatypes for all
+generated rows. If the template contains more than one row, the first row is
+kept as is (header row) and the second row cell's datatypes are used as
+datatypes for all generated rows.
 
 .. _openpyxl: https://openpyxl.readthedocs.org/en/default/
 
