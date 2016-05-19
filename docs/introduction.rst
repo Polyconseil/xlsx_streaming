@@ -18,7 +18,7 @@ Django example
 
     def my_view(request):
         qs = MyModel.objects.all()
-        with open('template.xlsx') as template:
+        with open('template.xlsx', 'rb') as template:
             stream = xlsx_streaming.stream_queryset_as_xlsx(
                 qs,
                 template,
@@ -44,7 +44,7 @@ template must be a valid Excel file with at least one row. If the template
 contains only one row, this row cell's datatypes are used as datatypes for all
 generated rows. If the template contains more than one row, the first row is
 kept as is (header row) and the second row cell's datatypes are used as
-datatypes for all generated rows.
+datatypes for all generated rows. The template must be open as binary.
 
 .. _openpyxl: https://openpyxl.readthedocs.org/en/default/
 

@@ -24,22 +24,24 @@ def stream_queryset_as_xlsx(
         encoding='utf-8',
     ):
     """
-        Iterate over qs by batch (typically a Django queryset) and stream the bytes of the
-        xlsx document generated from the data.
+    Iterate over qs by batch (typically a Django queryset) and stream the bytes of the
+    xlsx document generated from the data.
 
-        This function can typically be used to stream data extracted from a database by batch,
-        making many small database requests instead of one big request which could timeout.
+    This function can typically be used to stream data extracted from a database by batch,
+    making many small database requests instead of one big request which could timeout.
 
-        args:
-            qs (iterable): an iterable containing the rows (typically a Django queryset)
-            xlsx_template (file like): an in memory xlsx file template containing
-                the header (optional) and the first row used to infer data types for each column.
-                If not provided, all cells will be formatted as text.
-            serializer (function): a function applied to each batch of rows to transform them before saving
-                them to the xlsx document (defaults to identity)
-            batch_size (int): the size of each batch of rows
+    args:
+        qs (iterable): an iterable containing the rows (typically a Django queryset)
+        xlsx_template (file like): an in memory xlsx file template containing
+            the header (optional) and the first row used to infer data types for each column.
+            If not provided, all cells will be formatted as text.
+        serializer (function): a function applied to each batch of rows to transform them before saving
+            them to the xlsx document (defaults to identity)
+        batch_size (int): the size of each batch of rows
+        encoding (str): the file encoding
 
-    ..note: If the xlsx template contains more than one row, the first row is kept as is in the final
+    Note:
+        If the xlsx template contains more than one row, the first row is kept as is in the final
         xlsx file (header row), and the second one is used as a template for all the generated rows.
     """
     serializer = serializer or (lambda x: x)
