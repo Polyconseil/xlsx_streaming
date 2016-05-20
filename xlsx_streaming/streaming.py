@@ -30,15 +30,18 @@ def stream_queryset_as_xlsx(
     This function can typically be used to stream data extracted from a database by batch,
     making many small database requests instead of one big request which could timeout.
 
-    args:
-        qs (iterable): an iterable containing the rows (typically a Django queryset)
-        xlsx_template (file like): an in memory xlsx file template containing
+    Args:
+        qs (Iterable): an iterable containing the rows (typically a Django queryset)
+        xlsx_template (Optional[BytesIO]): an in memory xlsx file template containing
             the header (optional) and the first row used to infer data types for each column.
             If not provided, all cells will be formatted as text.
-        serializer (function): a function applied to each batch of rows to transform them before saving
-            them to the xlsx document (defaults to identity)
-        batch_size (int): the size of each batch of rows
-        encoding (str): the file encoding
+        serializer (Optional[Callable]): a function applied to each batch of rows to transform
+            them before saving them to the xlsx document (defaults to identity).
+        batch_size (Optional[int]): the size of each batch of rows
+        encoding (Optional[str]): the file encoding
+
+    Returns:
+        Iterable: A streamable xlsx file
 
     Note:
         If the xlsx template contains more than one row, the first row is kept as is in the final

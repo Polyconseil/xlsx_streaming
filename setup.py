@@ -59,9 +59,8 @@ setup(
     install_requires=REQUIREMENTS,
     tests_require= [
         'docutils',
-        'sphinx',
+        'Sphinx',
         'sphinx-rtd-theme',
-        'sphinxcontrib-napoleon',
         'openpyxl',
         'pytz',
     ],

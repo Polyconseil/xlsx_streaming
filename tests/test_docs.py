@@ -19,7 +19,7 @@ def test_sphinx(doc_path):
     build_dir = tempfile.mkdtemp()
     return_code = sphinx_cmdline([
         'sphinx-build',
-        '-W', '-n', '-q',
+        '-W', '-q',
         '-b', 'html',
         '-d', os.path.join(build_dir, 'doctrees'),
         doc_path,

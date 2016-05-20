@@ -53,10 +53,11 @@ def get_info(info):
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',
 ]
 
 napoleon_google_docstring = True
+nitpick_ignore = [('py:obj', 'iterable')]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
