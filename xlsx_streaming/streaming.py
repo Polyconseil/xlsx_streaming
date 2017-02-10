@@ -116,6 +116,10 @@ def zip_to_zipstream(zip_file, only=None, exclude=None):
 
 def get_first_sheet_name(xlsx_zipfile):
     try:
-        return next(path for path in xlsx_zipfile.namelist() if path.startswith(EXCEL_WORKSHEETS_PATH))
+        return next(
+            path
+            for path in xlsx_zipfile.namelist()
+            if path.startswith(EXCEL_WORKSHEETS_PATH) and path.endswith('.xml')
+        )
     except StopIteration:
         return None
