@@ -1,5 +1,5 @@
-Next release (soon)
--------------------
+0.3.1 (2017-02-22)
+------------------
 
 * First sheet of a workbook is now more reliably detected
 
