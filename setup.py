@@ -57,23 +57,5 @@ setup(
         'setuptools',
     ],
     install_requires=REQUIREMENTS,
-    tests_require= [
-        'docutils',
-        'Sphinx',
-        'sphinx-rtd-theme',
-        'openpyxl',
-        'pytz',
-    ],
-    extras_require={
-            ":python_version == '2.6'": [
-                'Sphinx<1.5',
-            ],
-            ":python_version == '2.7'": [
-                'Sphinx',
-            ],
-            ":python_version == '3.4'": [
-                'Sphinx',
-            ],
-        },
     test_suite='tests'
 )

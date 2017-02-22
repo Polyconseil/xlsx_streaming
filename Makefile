@@ -1,7 +1,7 @@
 .PHONY: test docs
 
 update:
-	pip install -e .
+	pip install -r requirements_dev.txt
 
 clean:
 	find xlsx_streaming "(" -name '*.egg' -or -name '*.pyc' -or -name '*.pyo' ")" -delete
