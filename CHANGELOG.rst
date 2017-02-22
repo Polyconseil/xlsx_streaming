@@ -1,4 +1,9 @@
-0.3.0 (2016-04-03)
+Next release (soon)
+-------------------
+
+* First sheet of a workbook is now more reliably detected
+
+0.3.0 (2017-02-22)
 ------------------
 
 * It is now possible to stream data to an Excel document without providing
