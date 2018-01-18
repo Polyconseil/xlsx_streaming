@@ -17,7 +17,7 @@ Django example
     import xlsx_streaming
 
     def my_view(request):
-        qs = MyModel.objects.all()
+        qs = MyModel.objects.all().values_list('field1', 'field2', 'field3')
         with open('template.xlsx', 'rb') as template:
             stream = xlsx_streaming.stream_queryset_as_xlsx(
                 qs,
