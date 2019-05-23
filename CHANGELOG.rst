@@ -1,7 +1,7 @@
 0.3.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- ``stream_queryset_as_xlsx()`` now accepts a generator. [Hugo Lecuyer].
 
 
 0.3.1 (2017-02-22)

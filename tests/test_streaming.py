@@ -23,7 +23,7 @@ def lists_equal(list_left, list_right):
 
 class TestStreaming(unittest.TestCase):
     def test_serialize_queryset_by_batch(self):
-        queryset = [list(range(10 * i, 10 * (i + 1))) for i in range(27)]
+        queryset = [range(10 * i, 10 * (i + 1)) for i in range(27)]
         gen = streaming.serialize_queryset_by_batch(queryset, serializer=lambda x: x, batch_size=10)
 
         batch = next(gen)

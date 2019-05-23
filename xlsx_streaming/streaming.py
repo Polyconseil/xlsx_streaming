@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+from itertools import chain, islice
 import logging
 import zipfile
 
@@ -76,14 +77,15 @@ def stream_queryset_as_xlsx(
 
     return zipped_stream
 
-
 def serialize_queryset_by_batch(qs, serializer, batch_size):
-    start, last_batch = 0, []
-    while start == 0 or len(last_batch) == batch_size:
-        last_batch = list(qs[start:start + batch_size])  # force queryset evaluation
-        yield serializer(last_batch)
-        start += batch_size
+    qs_slices = chunks(qs, batch_size)
+    for batch in qs_slices:
+        yield serializer(list(batch))
 
+def chunks(iterable, size):
+    iterator = iter(iterable)
+    for first in iterator:
+        yield chain([first], islice(iterator, size - 1))
 
 def zip_to_zipstream(zip_file, only=None, exclude=None):
     """
