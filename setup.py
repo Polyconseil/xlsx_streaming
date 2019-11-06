@@ -1,28 +1,11 @@
-import io
-import os
-import os.path
-import re
-
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages
 
 PACKAGE = 'xlsx_streaming'
 description = 'Export your data as an xlsx stream'
 
 
-def _open(*file_path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    return io.open(os.path.join(here, *file_path), 'r', encoding='utf-8')
-
-
-def get_version(package):
-    version_pattern = re.compile(r"^__version__ = [\"']([\w_.-]+)[\"']$", re.MULTILINE)
-    with _open(*(package.split('.') + ['__init__.py'])) as version_file:
-        matched = version_pattern.search(version_file.read())
-    return matched.groups()[0]
-
-
 def get_long_description():
-    with _open('README.rst') as readme_file:
+    with open('README.rst') as readme_file:
         return readme_file.read()
 
 
@@ -32,7 +15,7 @@ REQUIREMENTS = [
 
 setup(
     name=PACKAGE,
-    version=get_version(PACKAGE),
+    version='1.0.0.dev0',
     description=description,
     long_description=get_long_description(),
     classifiers=[
@@ -56,5 +39,5 @@ setup(
         'setuptools',
     ],
     install_requires=REQUIREMENTS,
-    test_suite='tests'
+    test_suite='tests',
 )
