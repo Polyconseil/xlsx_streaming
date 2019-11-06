@@ -12,3 +12,7 @@ docs:
 
 test:
 	python setup.py test
+
+quality:
+	python setup.py check --strict --metadata --restructuredtext
+	pylint --reports=no setup.py xlsx_streaming tests

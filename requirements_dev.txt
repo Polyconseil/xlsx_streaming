@@ -1,7 +1,7 @@
--e .
-
 docutils
 openpyxl
+pylint
 pytz
+readme_renderer
 sphinx
 sphinx-rtd-theme

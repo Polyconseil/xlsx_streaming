@@ -1,9 +1,19 @@
 language: python
+cache: pip
 
-python:
-    - 2.6
-    - 2.7
-    - 3.4
+matrix:
+  fast_finish: true
+  include:
+    - {python: '3.5'}
+    - {python: '3.6'}
+    - {python: '3.7'}
+    - {python: '3.8'}
 
-install: make update
-script: make test
+    - {env: TOXENV=docs, python: '3.7'}
+    - {env: TOXENV=quality, python: '3.7'}
+
+install:
+  - travis_retry pip install tox tox-travis
+
+script:
+  - tox
