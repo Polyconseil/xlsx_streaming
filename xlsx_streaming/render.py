@@ -120,7 +120,7 @@ def update_cell(cell, line, value):
 
     try:
         update_function(cell, value)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         args = e.args or ['']
         msg = "(column '%s', line '%s') data does not match template: %s" % (column, line, args[0])
         logger.debug(msg)
@@ -129,7 +129,7 @@ def update_cell(cell, line, value):
 
 def _update_boolean_cell(cell, value):
     if value is not None and not isinstance(value, bool):
-        raise AttributeError("expected a boolean got %s.", value)
+        raise AttributeError("expected a boolean got %s." % value)
     next(child for child in cell if child.tag == 'v').text = '' if value is None else str(int(value))
 
 
@@ -144,7 +144,7 @@ def _update_numeric_cell(cell, value):
         try:
             float(cell_text)
         except:
-            raise AttributeError("expected a numeric or date like value got %s.", cell_text)
+            raise AttributeError("expected a numeric or date like value got %s." % cell_text)
     next(child for child in cell if child.tag == 'v').text = cell_text
 
 
@@ -231,7 +231,7 @@ def get_column(cell):
     """Return the column attribute ([A-Z]+) of the openxml cell."""
     match = re.match(OPENXML_COLUMN_RE, cell.get('r', ''))
     if match is None:
-        raise AttributeError('The cell attribute is not a valid OpenXML column name: %s', cell.get('r'))
+        raise AttributeError('The cell attribute is not a valid OpenXML column name: %s' % cell.get('r'))
     return match.group(1)
 
 
