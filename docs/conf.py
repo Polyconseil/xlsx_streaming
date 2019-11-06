@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # xlsx_streaming documentation build configuration file, created by
 # sphinx-quickstart on Mon Dec 14 21:27:28 2015.
 #
@@ -76,7 +74,7 @@ master_doc = 'index'
 # General information about the project.
 project = get_info('name')
 author = get_info('author')
-copyright = u'2015, ' + author
+copyright = '2015, ' + author
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

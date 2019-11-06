@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 import datetime
 import io
 import os
@@ -14,7 +10,8 @@ from xlsx_streaming import streaming
 
 from .utils import gen_xlsx_template
 
-def lists_equal(list_left, list_right):
+
+def lists_equal(list_left, list_right):  # FIXME (before merge)
     # TestCase.assertListEqual is not available with python 2.6
     for left, right in zip(list_left, list_right):
         if left != right:

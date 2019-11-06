@@ -1,21 +1,18 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 import unittest
+import sys
 from xml.etree import ElementTree as ETree
 
-from xlsx_streaming import compat
 from xlsx_streaming import render
 
 from .utils import gen_xlsx_sheet
+
 
 class TestOpenXML(unittest.TestCase):
 
     def test_rm_namespace(self):
         element = ETree.fromstring(gen_xlsx_sheet())
         render.rm_namespace(element)
-        element_iter = compat.itertree(element)
+        element_iter = element.iter()
         self.assertEqual(next(element_iter).tag, 'worksheet')
         self.assertEqual(next(element_iter).tag, 'sheetPr')
         self.assertEqual(next(element_iter).tag, 'outlinePr')
@@ -25,7 +22,7 @@ class TestOpenXML(unittest.TestCase):
         self.assertTrue(header is None)
         self.assertEqual(template.tag, 'row')
         self.assertEqual(template.get('r'), '1')
-        element_iter = compat.itertree(template)
+        element_iter = template.iter()
         next(element_iter)
         child = next(element_iter)
         self.assertEqual(child.tag, 'c')
@@ -72,7 +69,7 @@ class TestOpenXML(unittest.TestCase):
         render.update_cell(cell, line=2, value='Updated')
         self.assertEqual(cell.get('r'), 'C2')
         self.assertEqual(cell.get('t'), 'inlineStr')
-        element_iter = compat.itertree(cell)
+        element_iter = cell.iter()
         next(element_iter)
         self.assertEqual(next(element_iter).tag, 'is')
         child = next(element_iter)
@@ -95,14 +92,27 @@ class TestOpenXML(unittest.TestCase):
         template_row = self.gen_row()
         row = render.render_row([42, 'Noé!>', 24], template_row, 12)
         ETree.fromstring(row)
-        self.assertEqual(
-            row,
-            '<row r="12">'
-            '<c r="A12" t="n"><v>42</v></c>'
-            '<c r="B12" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
-            '<c r="C12"><v>24</v></c>'
-            '</row>'.encode('utf-8')
-        )
+        # Starting from Python 3.8, ElementTree preserves the
+        # attribute order specified by the user. Before 3.8,
+        # attributes were ordered alphabetically.
+        if sys.version[:3] >= '3.8':
+            expected = (
+                '<row r="12">'
+                '<c t="n" r="A12"><v>42</v></c>'
+                '<c t="inlineStr" r="B12"><is><t>Noé!&gt;</t></is></c>'
+                '<c r="C12"><v>24</v></c>'
+                '</row>'.encode()
+            )
+        else:
+            expected = (
+                '<row r="12">'
+                '<c r="A12" t="n"><v>42</v></c>'
+                '<c r="B12" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
+                '<c r="C12"><v>24</v></c>'
+                '</row>'.encode()
+            )
+        self.assertEqual(row, expected)
+
 
     def test_render_row_wrong_template(self):
         template_row = self.gen_row()
@@ -115,7 +125,7 @@ class TestOpenXML(unittest.TestCase):
             '<c r="B1" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
             '<c r="C1" t="inlineStr"><is><t>24</t></is></c>'
             '<c r="D1" t="inlineStr"><is><t>NoTemplateElement</t></is></c>'
-            '</row>'.encode('utf-8')
+            '</row>'.encode()
         )
 
     def test_render_row_null_template(self):
@@ -128,25 +138,42 @@ class TestOpenXML(unittest.TestCase):
             '<c r="A2" t="inlineStr"><is><t>42</t></is></c>'
             '<c r="B2" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
             '<c r="C2" t="inlineStr"><is><t>24</t></is></c>'
-            '</row>'.encode('utf-8')
+            '</row>'.encode()
         )
 
     def test_render_rows(self):
         template_row = self.gen_row()
         rows = render.render_rows([[42, 'Noé!>', 24], [18, '<éON', 21]], template_row, 1)
-        self.assertEqual(
-            rows,
-            '<row r="1">'
-            '<c r="A1" t="n"><v>42</v></c>'
-            '<c r="B1" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
-            '<c r="C1"><v>24</v></c>'
-            '</row>\n'
-            '<row r="2">'
-            '<c r="A2" t="n"><v>18</v></c>'
-            '<c r="B2" t="inlineStr"><is><t>&lt;éON</t></is></c>'
-            '<c r="C2"><v>21</v></c>'
-            '</row>'.encode('utf-8')
-        )
+        # Starting from Python 3.8, ElementTree preserves the
+        # attribute order specified by the user. Before 3.8,
+        # attributes were ordered alphabetically.
+        if sys.version[:3] >= '3.8':
+            expected = (
+                '<row r="1">'
+                '<c t="n" r="A1"><v>42</v></c>'
+                '<c t="inlineStr" r="B1"><is><t>Noé!&gt;</t></is></c>'
+                '<c r="C1"><v>24</v></c>'
+                '</row>\n'
+                '<row r="2">'
+                '<c t="n" r="A2"><v>18</v></c>'
+                '<c t="inlineStr" r="B2"><is><t>&lt;éON</t></is></c>'
+                '<c r="C2"><v>21</v></c>'
+                '</row>'.encode()
+            )
+        else:
+            expected = (
+                '<row r="1">'
+                '<c r="A1" t="n"><v>42</v></c>'
+                '<c r="B1" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
+                '<c r="C1"><v>24</v></c>'
+                '</row>\n'
+                '<row r="2">'
+                '<c r="A2" t="n"><v>18</v></c>'
+                '<c r="B2" t="inlineStr"><is><t>&lt;éON</t></is></c>'
+                '<c r="C2"><v>21</v></c>'
+                '</row>'.encode()
+            )
+        self.assertEqual(rows, expected)
 
     def test_render_worksheet(self):
         data = [[[42, 'Noé!>', 24], [18, '<éON', 21]]]
@@ -162,7 +189,7 @@ class TestOpenXML(unittest.TestCase):
         document += stream
         self.assertTrue(stream.startswith(b' </sheetData'))
 
-        tree_iter = compat.itertree(ETree.fromstring(document))
+        tree_iter = ETree.fromstring(document).iter()
         self.assertEqual(next(tree_iter).tag, '{%s}worksheet' % render.OPENXML_NS)
         self.assertEqual(next(tree_iter).tag, '{%s}sheetData' % render.OPENXML_NS)
         self.assertEqual(next(tree_iter).tag, '{%s}row' % render.OPENXML_NS)

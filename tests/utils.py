@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 import datetime
 from io import BytesIO
 import zipfile
@@ -9,6 +5,7 @@ import zipfile
 import openpyxl
 
 from xlsx_streaming import streaming
+
 
 def gen_xlsx_template(with_header=False):
     wb = openpyxl.Workbook()
@@ -19,6 +16,7 @@ def gen_xlsx_template(with_header=False):
         for j, value in enumerate(row):
             wb.active.cell(row=i + 1, column=j + 1).value = value
     return BytesIO(openpyxl.writer.excel.save_virtual_workbook(wb))
+
 
 def gen_xlsx_sheet(with_header=False):
     xlsx_template = gen_xlsx_template(with_header=with_header)

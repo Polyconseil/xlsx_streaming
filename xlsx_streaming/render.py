@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 import datetime
 import logging
 import re
 from xml.etree import ElementTree as ETree
-
-from . import compat
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +99,7 @@ def render_row(row_values, row_template, line, encoding='utf-8'):
 
     for value, cell_template in zip(row_values, cells):
         update_cell(cell_template, line, value)
-    row_template.set('r', compat.text_type(line))
+    row_template.set('r', str(line))
     return ETree.tostring(row_template, encoding=encoding)
 
 
@@ -136,7 +130,7 @@ def update_cell(cell, line, value):
 def _update_boolean_cell(cell, value):
     if value is not None and not isinstance(value, bool):
         raise AttributeError("expected a boolean got %s.", value)
-    next(child for child in cell if child.tag == 'v').text = '' if value is None else compat.text_type(int(value))
+    next(child for child in cell if child.tag == 'v').text = '' if value is None else str(int(value))
 
 
 def _update_numeric_cell(cell, value):
@@ -144,9 +138,9 @@ def _update_numeric_cell(cell, value):
         cell_text = ''
     else:
         try:
-            cell_text = compat.text_type(datetime_to_excel_datetime(value))
+            cell_text = str(datetime_to_excel_datetime(value))
         except TypeError:
-            cell_text = compat.text_type(value)
+            cell_text = str(value)
         try:
             float(cell_text)
         except:
@@ -161,8 +155,8 @@ def _update_text_cell(cell, value):
         cell.clear()
         cell.set('t', 'inlineStr')
         ETree.SubElement(ETree.SubElement(cell, 'is'), 't')
-    updated_text = '' if value is None else compat.text_type(value)
-    next(child for child in compat.itertree(cell) if child.tag == 't').text = updated_text
+    updated_text = '' if value is None else str(value)
+    next(child for child in cell.iter() if child.tag == 't').text = updated_text
 
 
 def datetime_to_excel_datetime(dt_obj, date_1904=False):
@@ -223,7 +217,7 @@ def datetime_to_excel_datetime(dt_obj, date_1904=False):
 
 def rm_namespace(xml_element):
     """Remove namespace in the ``xml_element`` and all of its children."""
-    for el in compat.itertree(xml_element):
+    for el in xml_element.iter():
         if '}' in el.tag:
             el.tag = el.tag.split('}', 1)[1]  # strip all namespaces
 
@@ -253,7 +247,7 @@ def _get_column_letter(col_idx):
     # these indicies corrospond to A -> ZZZ and include all allowed
     # columns
     if not 1 <= col_idx <= 18278:
-        raise ValueError("Invalid column index {0}".format(col_idx))
+        raise ValueError("Invalid column index {}".format(col_idx))
     letters = []
     while col_idx > 0:
         col_idx, remainder = divmod(col_idx, 26)

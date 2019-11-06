@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 import datetime
 import unittest
 
@@ -9,10 +5,11 @@ from pytz import timezone
 
 from xlsx_streaming import render
 
+
 class TestDatetime(unittest.TestCase):
     def tearDown(self):
         render.set_export_timezone(timezone('UTC'))
-        super(TestDatetime, self).tearDown()
+        super().tearDown()
 
     def test_set_timezone(self):
         render.set_export_timezone(timezone('US/Eastern'))
