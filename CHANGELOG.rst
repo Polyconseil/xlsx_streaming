@@ -1,7 +1,12 @@
 0.4.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix bug in ``stream_queryset_as_xlsx()`` that was introduced in
+  version 0.4.0. When called with a Django QuerySet object (or
+  something similar), the function made a single SQL query, instead of
+  multiple SQL queries depending on the ``batch_size`` argument. This
+  bug may cause performance issues when fetching many rows from the
+  database.
 
 
 0.4.0 (2019-11-06)

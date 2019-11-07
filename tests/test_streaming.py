@@ -21,9 +21,25 @@ def lists_equal(list_left, list_right):
             return False
     return True
 
+
+class FakeDjangoQuerySet:
+    """Record queries (actually slices used for each query) that would be
+    made by a regular QuerySet from Django.
+    """
+    def __init__(self, values, queries):
+        self.queries = queries
+        self.values = values
+
+    def __getitem__(self, slice_):
+        # We should always be asked for a slice, never for a single item.
+        assert isinstance(slice_, slice)
+        self.queries.append(slice_)
+        return self.values[slice_]
+
+
 class TestStreaming(unittest.TestCase):
-    def test_serialize_queryset_by_batch(self):
-        queryset = [range(10 * i, 10 * (i + 1)) for i in range(27)]
+
+    def _test_serialize_queryset_by_batch(self, queryset):
         gen = streaming.serialize_queryset_by_batch(queryset, serializer=lambda x: x, batch_size=10)
 
         batch = next(gen)
@@ -39,6 +55,30 @@ class TestStreaming(unittest.TestCase):
         self.assertEqual(len(batch), 7)
 
         self.assertRaises(StopIteration, lambda: next(gen))
+
+    def test_serialize_queryset_by_batch_with_lists(self):
+        queryset = [list() for i in range(27)]
+        self._test_serialize_queryset_by_batch(queryset)
+
+    def test_serialize_queryset_by_batch_with_ranges(self):
+        queryset = [range(10 * i, 10 * (i + 1)) for i in range(27)]
+        self._test_serialize_queryset_by_batch(queryset)
+
+    def test_serialize_queryset_by_batch_with_generator(self):
+        def generate():
+            for i in range(27):
+                yield range(10 * i, 10 * (i + 1))
+        queryset = generate()
+        self._test_serialize_queryset_by_batch(queryset)
+
+    def test_serialize_queryset_django_with_queryset(self):
+        # Fake a Django QuerySet to make sure that we fetch database
+        # results by batch, not in a single query.
+        queries = []
+        values = [list(range(10 * i, 10 * (i + 1))) for i in range(27)]
+        queryset = FakeDjangoQuerySet(values, queries)
+        self._test_serialize_queryset_by_batch(queryset)
+        self.assertEqual(len(queries), 3)
 
     def test_serialize_queryset_by_batch_with_serializer(self):
         queryset = [list(range(10)) for i in range(8)]
