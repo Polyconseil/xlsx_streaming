@@ -1,4 +1,4 @@
-0.4.1 (unreleased)
+0.4.1 (2019-11-07)
 ------------------
 
 - Fix bug in ``stream_queryset_as_xlsx()`` that was introduced in
