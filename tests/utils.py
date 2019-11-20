@@ -1,5 +1,6 @@
 import datetime
-from io import BytesIO
+import io
+import tempfile
 import zipfile
 
 import openpyxl
@@ -15,7 +16,10 @@ def gen_xlsx_template(with_header=False):
     for i, row in enumerate(rows):
         for j, value in enumerate(row):
             wb.active.cell(row=i + 1, column=j + 1).value = value
-    return BytesIO(openpyxl.writer.excel.save_virtual_workbook(wb))
+    with tempfile.NamedTemporaryFile() as fp:
+        openpyxl.writer.excel.save_workbook(wb, fp)
+        fp.seek(0)
+        return io.BytesIO(fp.read())
 
 
 def gen_xlsx_sheet(with_header=False):
