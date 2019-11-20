@@ -1,7 +1,7 @@
 1.0.0 (unreleased)
 ------------------
 
-- |backward-incompatible| Drop support of Python 2 and Python 3.4. xlxs_streaming now supports
+- |backward-incompatibility| Drop support of Python 2 and Python 3.4. xlxs_streaming now supports
   only Python 3.5 and onward.
 
 
@@ -50,6 +50,6 @@
 
 .. role:: raw-html(raw)
 
-.. |backward-incompatible| raw:: html
+.. |backward-incompatibility| raw:: html
 
-    <span style="background-color: #ffffbc; padding: 0.3em; font-weight: bold;">backward incompatible</span>
+    <span style="background-color: #ffffbc; padding: 0.3em; font-weight: bold;">backward incompatibility</span>

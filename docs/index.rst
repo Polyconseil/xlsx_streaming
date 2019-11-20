@@ -16,6 +16,7 @@ Contents:
 
    introduction
    reference
+   changelog
 
 
 Indices and tables
