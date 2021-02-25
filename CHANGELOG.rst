@@ -1,6 +1,7 @@
 1.0.0 (unreleased)
 ------------------
 
+- ``stream_queryset_as_xlsx()`` now accepts an iterator.
 - |backward-incompatibility| Drop support of Python 2 and Python 3.4. xlxs_streaming now supports
   only Python 3.5 and onward.
 

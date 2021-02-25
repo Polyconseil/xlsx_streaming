@@ -68,6 +68,10 @@ class TestStreaming(unittest.TestCase):
         queryset = generate()
         self._test_serialize_queryset_by_batch(queryset)
 
+    def test_serialize_queryset_by_batch_with_iterator(self):
+        queryset = iter(range(10 * i, 10 * (i + 1)) for i in range(27))
+        self._test_serialize_queryset_by_batch(queryset)
+
     def test_serialize_queryset_django_with_queryset(self):
         # Fake a Django QuerySet to make sure that we fetch database
         # results by batch, not in a single query.

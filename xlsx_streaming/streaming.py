@@ -1,6 +1,6 @@
+import collections.abc
 from itertools import chain, islice
 import logging
-import types
 import zipfile
 
 import zipstream
@@ -76,7 +76,7 @@ def stream_queryset_as_xlsx(
 
 
 def serialize_queryset_by_batch(qs, serializer, batch_size):
-    if isinstance(qs, types.GeneratorType):
+    if isinstance(qs, collections.abc.Iterator):
         qs_slices = _chunks(qs, batch_size)
         for batch in qs_slices:
             yield serializer(list(batch))
