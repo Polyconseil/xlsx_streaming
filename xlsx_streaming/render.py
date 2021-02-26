@@ -143,8 +143,8 @@ def _update_numeric_cell(cell, value):
             cell_text = str(value)
         try:
             float(cell_text)
-        except:
-            raise AttributeError("expected a numeric or date like value got %s." % cell_text)
+        except Exception as e:  # pylint: disable=broad-except
+            raise AttributeError("expected a numeric or date like value got %s." % cell_text) from e
     next(child for child in cell if child.tag == 'v').text = cell_text
 
 
