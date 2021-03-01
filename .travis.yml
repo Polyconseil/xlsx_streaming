@@ -9,8 +9,8 @@ matrix:
     - {python: '3.8'}
     - {python: '3.9'}
 
-    - {env: TOXENV=docs, python: '3.7'}
-    - {env: TOXENV=quality, python: '3.7'}
+    - {env: TOXENV=docs, python: '3.8'}
+    - {env: TOXENV=quality, python: '3.8'}
 
 install:
   - travis_retry pip install tox tox-travis
