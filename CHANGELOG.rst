@@ -1,4 +1,4 @@
-1.0.0 (unreleased)
+1.0.0 (2021-03-01)
 ------------------
 
 - ``stream_queryset_as_xlsx()`` now accepts an iterator.
