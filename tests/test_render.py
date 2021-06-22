@@ -143,7 +143,7 @@ class TestOpenXML(unittest.TestCase):
 
     def test_render_rows(self):
         template_row = self.gen_row()
-        rows = render.render_rows([[42, 'Noé!>', 24], [18, '<éON', 21]], template_row, 1)
+        rows, lines = render.render_rows([[42, 'Noé!>', 24], [18, '<éON', 21]], template_row, 1)
         # Starting from Python 3.8, ElementTree preserves the
         # attribute order specified by the user. Before 3.8,
         # attributes were ordered alphabetically.
@@ -174,9 +174,9 @@ class TestOpenXML(unittest.TestCase):
                 '</row>'.encode()
             )
         self.assertEqual(rows, expected)
+        self.assertEqual(lines, 2)
 
-    def test_render_worksheet(self):
-        data = [[[42, 'Noé!>', 24], [18, '<éON', 21]]]
+    def _verify_sheet(self, data):
         document = b''
         xlsx_doc = render.render_worksheet(data, gen_xlsx_sheet())
         stream = next(xlsx_doc)
@@ -194,3 +194,11 @@ class TestOpenXML(unittest.TestCase):
         self.assertEqual(next(tree_iter).tag, '{%s}sheetData' % render.OPENXML_NS)
         self.assertEqual(next(tree_iter).tag, '{%s}row' % render.OPENXML_NS)
         self.assertEqual(next(tree_iter).tag, '{%s}c' % render.OPENXML_NS)
+
+    def test_render_worksheet(self):
+        data = [[[42, 'Noé!>', 24], [18, '<éON', 21]]]
+        self._verify_sheet(data)
+
+        # render worksheet with an iterator
+        data = iter([iter([[42, 'Noé!>', 24], [18, '<éON', 21]])])
+        self._verify_sheet(data)
