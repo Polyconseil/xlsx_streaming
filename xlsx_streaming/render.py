@@ -49,8 +49,9 @@ def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
         yield ETree.tostring(header_tree, encoding=encoding)
         current_line += 1
     for rows in rows_batches:
-        yield render_rows(rows, row_template, start_line=current_line, encoding=encoding)
-        current_line += len(rows)
+        rendered_rows, lines = render_rows(rows, row_template, start_line=current_line, encoding=encoding)
+        yield rendered_rows
+        current_line += lines
     yield footer
 
 
@@ -71,7 +72,12 @@ def render_rows(rows, row_template, start_line, encoding='utf-8'):
 
         ..note: This function updates row_template each time it is called.
     """
-    return b'\n'.join(render_row(row, row_template, i, encoding) for i, row in enumerate(rows, start_line))
+    lines = 0
+    rendered_rows = []
+    for i, row in enumerate(rows, start_line):
+        rendered_rows.append(render_row(row, row_template, i, encoding))
+        lines += 1
+    return b'\n'.join(rendered_rows), lines
 
 
 def render_row(row_values, row_template, line, encoding='utf-8'):
