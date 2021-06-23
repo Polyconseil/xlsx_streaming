@@ -1,4 +1,4 @@
-1.1.0 (unreleased)
+1.1.0 (2021-06-23)
 ------------------
 
 - ``render_worksheet()`` now allows rendering worksheet with iterators.

@@ -15,7 +15,7 @@ REQUIREMENTS = [
 
 setup(
     name=PACKAGE,
-    version='1.1.0.dev0',
+    version='1.1.0',
     description=description,
     long_description=get_long_description(),
     classifiers=[
