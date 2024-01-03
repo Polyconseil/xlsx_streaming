@@ -5,7 +5,7 @@ description = 'Export your data as an xlsx stream'
 
 
 def get_long_description():
-    with open('README.rst') as readme_file:
+    with open('README.rst', encoding='utf-8') as readme_file:
         return readme_file.read()
 
 
@@ -31,8 +31,8 @@ setup(
     ],
     keywords=['xlsx', 'excel', 'streaming'],
     author='Polyconseil',
-    author_email='opensource+%s@polyconseil.fr' % PACKAGE,
-    url='https://github.com/Polyconseil/%s/' % PACKAGE,
+    author_email=f'opensource+{PACKAGE}@polyconseil.fr',
+    url=f'https://github.com/Polyconseil/{PACKAGE}/',
     license='GNU GPLv3',
     packages=find_packages(exclude=['docs', 'tests']),
     setup_requires=[

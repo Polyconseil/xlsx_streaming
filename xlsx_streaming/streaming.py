@@ -53,12 +53,12 @@ def stream_queryset_as_xlsx(
         zip_template = zipfile.ZipFile(xlsx_template, mode='r')
     except Exception:  # pylint: disable=broad-except
         logger.debug('Template is not a valid Excel file, ignoring it. Every cell will be saved as text.')
-        zip_template = zipfile.ZipFile(DEFAULT_TEMPLATE, mode='r')
+        zip_template = zipfile.ZipFile(DEFAULT_TEMPLATE, mode='r')  # pylint: disable=consider-using-with
 
     sheet_name = get_first_sheet_name(zip_template)
     if sheet_name is None:
         logger.debug('Template is not a valid Excel file, ignoring it. Every cell will be saved as text.')
-        zip_template = zipfile.ZipFile(DEFAULT_TEMPLATE, mode='r')
+        zip_template = zipfile.ZipFile(DEFAULT_TEMPLATE, mode='r')  # pylint: disable=consider-using-with
         sheet_name = get_first_sheet_name(zip_template)
 
     xlsx_sheet_string = zip_template.read(sheet_name).decode(encoding)

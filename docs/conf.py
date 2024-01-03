@@ -12,7 +12,6 @@
 
 import sys
 import os
-import shlex
 
 try:
     from subprocess import check_output

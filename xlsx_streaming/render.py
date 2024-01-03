@@ -33,9 +33,8 @@ def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
             openxml_sheet_string (str): a template for the final sheet containing the header and an example row
     """
     header = (
-        '<worksheet xmlns="{ns}" xmlns:r="{ns_r}">\n'
+        f'<worksheet xmlns="{OPENXML_NS}" xmlns:r="{OPENXML_NS_R}">\n'
         ' <sheetData>\n'
-        .format(ns=OPENXML_NS, ns_r=OPENXML_NS_R)
     ).encode(encoding)
     footer = (
         ' </sheetData>\n'
@@ -128,14 +127,14 @@ def update_cell(cell, line, value):
         update_function(cell, value)
     except Exception as e:  # pylint: disable=broad-except
         args = e.args or ['']
-        msg = "(column '%s', line '%s') data does not match template: %s" % (column, line, args[0])
+        msg = f"(column '{column}', line '{line}') data does not match template: {args[0]}"
         logger.debug(msg)
-    cell.set('r', '%s%s' % (column, line))
+    cell.set('r', f'{column}{line}')
 
 
 def _update_boolean_cell(cell, value):
     if value is not None and not isinstance(value, bool):
-        raise AttributeError("expected a boolean got %s." % value)
+        raise AttributeError(f"expected a boolean got {value}.")
     next(child for child in cell if child.tag == 'v').text = '' if value is None else str(int(value))
 
 
@@ -150,7 +149,7 @@ def _update_numeric_cell(cell, value):
         try:
             float(cell_text)
         except Exception as e:  # pylint: disable=broad-except
-            raise AttributeError("expected a numeric or date like value got %s." % cell_text) from e
+            raise AttributeError(f"expected a numeric or date like value got {cell_text}.") from e
     next(child for child in cell if child.tag == 'v').text = cell_text
 
 
@@ -237,7 +236,7 @@ def get_column(cell):
     """Return the column attribute ([A-Z]+) of the openxml cell."""
     match = re.match(OPENXML_COLUMN_RE, cell.get('r', ''))
     if match is None:
-        raise AttributeError('The cell attribute is not a valid OpenXML column name: %s' % cell.get('r'))
+        raise AttributeError(f"The cell attribute is not a valid OpenXML column name: {cell.get('r')}")
     return match.group(1)
 
 
@@ -253,7 +252,7 @@ def _get_column_letter(col_idx):
     # these indicies corrospond to A -> ZZZ and include all allowed
     # columns
     if not 1 <= col_idx <= 18278:
-        raise ValueError("Invalid column index {}".format(col_idx))
+        raise ValueError(f"Invalid column index {col_idx}")
     letters = []
     while col_idx > 0:
         col_idx, remainder = divmod(col_idx, 26)
@@ -308,7 +307,7 @@ def get_default_template(row_values, reset_memory=False):
         el_t.text = 'Default'
         el_is = ETree.Element('is')
         el_is.append(el_t)
-        cell = ETree.Element('c', {'r': '%s%s' % (_get_column_letter(i), 1), 't': 'inlineStr'})
+        cell = ETree.Element('c', {'r': '%s%s' % (_get_column_letter(i), 1), 't': 'inlineStr'})  # pylint: disable=consider-using-f-string
         cell.append(el_is)
         root.append(cell)
 

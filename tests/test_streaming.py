@@ -54,7 +54,7 @@ class TestStreaming(unittest.TestCase):
         self.assertRaises(StopIteration, lambda: next(gen))
 
     def test_serialize_queryset_by_batch_with_lists(self):
-        queryset = [list() for i in range(27)]
+        queryset = [[] for i in range(27)]
         self._test_serialize_queryset_by_batch(queryset)
 
     def test_serialize_queryset_by_batch_with_ranges(self):
@@ -83,7 +83,9 @@ class TestStreaming(unittest.TestCase):
 
     def test_serialize_queryset_by_batch_with_serializer(self):
         queryset = [list(range(10)) for i in range(8)]
-        serializer = lambda rows: [list(map(lambda x: 2 * x, row)) for row in rows]
+
+        def serializer(rows):
+            return [list(map(lambda x: 2 * x, row)) for row in rows]
 
         gen = streaming.serialize_queryset_by_batch(queryset, serializer=serializer, batch_size=10)
 
@@ -100,10 +102,9 @@ class TestStreaming(unittest.TestCase):
 
         stream = streaming.stream_queryset_as_xlsx(qs, xlsx_template=template, batch_size=10)
 
-        f = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
-        for chunk in stream:
-            f.write(chunk)
-        f.close()
+        with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as f:
+            for chunk in stream:
+                f.write(chunk)
 
         new_wb = openpyxl.load_workbook(filename=f.name)
 
@@ -130,10 +131,9 @@ class TestStreaming(unittest.TestCase):
         queryset = [list(range(10)) for i in range(8)]
         stream = streaming.stream_queryset_as_xlsx(queryset, xlsx_template=template, batch_size=10)
 
-        f = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
-        for chunk in stream:
-            f.write(chunk)
-        f.close()
+        with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as f:
+            for chunk in stream:
+                f.write(chunk)
 
         new_wb = openpyxl.load_workbook(filename=f.name)
         for row in new_wb.active.rows:
