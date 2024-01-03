@@ -13,22 +13,7 @@
 import sys
 import os
 
-try:
-    from subprocess import check_output
-except ImportError:
-    def check_output(*popenargs, **kwargs):  # from python 2.7
-        from subprocess import PIPE, Popen, CalledProcessError
-        if 'stdout' in kwargs:
-            raise ValueError('stdout argument not allowed, it will be overridden.')
-        process = Popen(stdout=PIPE, *popenargs, **kwargs)
-        output, unused_err = process.communicate()
-        retcode = process.poll()
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            raise CalledProcessError(retcode, cmd, output=output)
-        return output
+from subprocess import check_output
 
 
 def get_info(info):

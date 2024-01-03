@@ -1,5 +1,4 @@
 import unittest
-import sys
 from xml.etree import ElementTree as ETree
 
 from xlsx_streaming import render
@@ -92,25 +91,13 @@ class TestOpenXML(unittest.TestCase):
         template_row = self.gen_row()
         row = render.render_row([42, 'Noé!>', 24], template_row, 12)
         ETree.fromstring(row)
-        # Starting from Python 3.8, ElementTree preserves the
-        # attribute order specified by the user. Before 3.8,
-        # attributes were ordered alphabetically.
-        if sys.version[:3] >= '3.8':
-            expected = (
-                '<row r="12">'
-                '<c t="n" r="A12"><v>42</v></c>'
-                '<c t="inlineStr" r="B12"><is><t>Noé!&gt;</t></is></c>'
-                '<c r="C12"><v>24</v></c>'
-                '</row>'.encode()
-            )
-        else:
-            expected = (
-                '<row r="12">'
-                '<c r="A12" t="n"><v>42</v></c>'
-                '<c r="B12" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
-                '<c r="C12"><v>24</v></c>'
-                '</row>'.encode()
-            )
+        expected = (
+            '<row r="12">'
+            '<c t="n" r="A12"><v>42</v></c>'
+            '<c t="inlineStr" r="B12"><is><t>Noé!&gt;</t></is></c>'
+            '<c r="C12"><v>24</v></c>'
+            '</row>'.encode()
+        )
         self.assertEqual(row, expected)
 
 
@@ -144,35 +131,18 @@ class TestOpenXML(unittest.TestCase):
     def test_render_rows(self):
         template_row = self.gen_row()
         rows, lines = render.render_rows([[42, 'Noé!>', 24], [18, '<éON', 21]], template_row, 1)
-        # Starting from Python 3.8, ElementTree preserves the
-        # attribute order specified by the user. Before 3.8,
-        # attributes were ordered alphabetically.
-        if sys.version[:3] >= '3.8':
-            expected = (
-                '<row r="1">'
-                '<c t="n" r="A1"><v>42</v></c>'
-                '<c t="inlineStr" r="B1"><is><t>Noé!&gt;</t></is></c>'
-                '<c r="C1"><v>24</v></c>'
-                '</row>\n'
-                '<row r="2">'
-                '<c t="n" r="A2"><v>18</v></c>'
-                '<c t="inlineStr" r="B2"><is><t>&lt;éON</t></is></c>'
-                '<c r="C2"><v>21</v></c>'
-                '</row>'.encode()
-            )
-        else:
-            expected = (
-                '<row r="1">'
-                '<c r="A1" t="n"><v>42</v></c>'
-                '<c r="B1" t="inlineStr"><is><t>Noé!&gt;</t></is></c>'
-                '<c r="C1"><v>24</v></c>'
-                '</row>\n'
-                '<row r="2">'
-                '<c r="A2" t="n"><v>18</v></c>'
-                '<c r="B2" t="inlineStr"><is><t>&lt;éON</t></is></c>'
-                '<c r="C2"><v>21</v></c>'
-                '</row>'.encode()
-            )
+        expected = (
+            '<row r="1">'
+            '<c t="n" r="A1"><v>42</v></c>'
+            '<c t="inlineStr" r="B1"><is><t>Noé!&gt;</t></is></c>'
+            '<c r="C1"><v>24</v></c>'
+            '</row>\n'
+            '<row r="2">'
+            '<c t="n" r="A2"><v>18</v></c>'
+            '<c t="inlineStr" r="B2"><is><t>&lt;éON</t></is></c>'
+            '<c r="C2"><v>21</v></c>'
+            '</row>'.encode()
+        )
         self.assertEqual(rows, expected)
         self.assertEqual(lines, 2)
 
