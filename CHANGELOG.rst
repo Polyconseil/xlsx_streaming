@@ -1,6 +1,7 @@
 1.2.0 (unreleased)
 ------------------
 
+- Add support for Python 3.10 & 3.11 & 3.12
 - Drop support for Python 3.6 & 3.7
 
 
