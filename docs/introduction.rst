@@ -64,7 +64,7 @@ For example, with a Django Rest Framework serializer:
 .. code:: python
 
     class MySerializer(serializers.Serializer):
-        …
+        pass
 
     serializer = lambda x: [d.values() for d in MySerializer(x, many=True).data]
     xlsx_streaming.stream_queryset_as_xlsx(qs, template, serializer=serializer)

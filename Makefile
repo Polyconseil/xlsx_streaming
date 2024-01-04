@@ -8,7 +8,7 @@ clean:
 	find xlsx_streaming -type d "(" -name build -or -name __pycache__ -or -name _build ")" -exec rm -r {} \;
 
 docs:
-	python setup.py build_sphinx
+	sphinx-build -v -a -b html -d docs/_build/doctrees/ docs/ docs/_build/xlsx_streamingdoc/
 
 test:
 	python setup.py test
