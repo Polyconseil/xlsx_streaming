@@ -32,18 +32,13 @@ def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
             rows_batches (iterable): each element is a list of lists containing the row values
             openxml_sheet_string (str): a template for the final sheet containing the header and an example row
     """
-    header = (
-        f'<worksheet xmlns="{OPENXML_NS}" xmlns:r="{OPENXML_NS_R}">\n'
-        ' <sheetData>\n'
-    ).encode(encoding)
-    footer = (
-        ' </sheetData>\n'
-        '</worksheet>\n'
-    ).encode(encoding)
+    header_tree, row_template = get_elements_from_template(openxml_sheet_string)
 
-    yield header
+    yield f'<worksheet xmlns="{OPENXML_NS}" xmlns:r="{OPENXML_NS_R}">\n'.encode(encoding)
+
+    yield '<sheetData>\n'.encode(encoding)
+
     current_line = 1
-    header_tree, row_template = get_header_and_row_template(openxml_sheet_string)  # pylint: disable=unbalanced-tuple-unpacking
     if header_tree is not None:
         yield ETree.tostring(header_tree, encoding=encoding)
         current_line += 1
@@ -51,7 +46,8 @@ def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
         rendered_rows, lines = render_rows(rows, row_template, start_line=current_line, encoding=encoding)
         yield rendered_rows
         current_line += lines
-    yield footer
+
+    yield " </sheetData>\n" "</worksheet>\n".encode(encoding)
 
 
 def render_rows(rows, row_template, start_line, encoding='utf-8'):
@@ -264,32 +260,42 @@ def _get_column_letter(col_idx):
     return ''.join(reversed(letters))
 
 
-def get_header_and_row_template(openxml_sheet):
+def _get_header_and_row_template(tree):
     """
-        Extract the header (potentially None) and the first row from openxml_sheet
+        Extract the header (potentially None) and the first row from
+        the provided tree
         args:
-            openxml_sheet (str): the openxml sheet imported as unicode
-        return (tuple): a tuple of (header_tree, row_template_tree) ElementTree objects
+            tree (ElementTree.Element): root element of the template
+        return (tuple):
+            a tuple of (header_tree, row_template_tree) ElementTree objects
     """
-    tree = ETree.fromstring(openxml_sheet)
-    rm_namespace(tree)
-    sheet_data = next(child for child in tree if child.tag == 'sheetData')
-    header_and_row_template = []
-    for child in sheet_data:
-        if child.tag == 'row':
-            header_and_row_template.append(child)
-        if len(header_and_row_template) == 2:
-            header, row = header_and_row_template  # pylint: disable=unbalanced-tuple-unpacking
-            if count_cells(header) != count_cells(row):
+    header_tree = None
+    row_template_tree = None
+
+    for child in tree.find('sheetData').iterfind('row'):
+        if header_tree is None:
+            header_tree = child
+        else:
+            row_template_tree = child
+            if count_cells(header_tree) != count_cells(row_template_tree):
                 logger.debug(
                     'Header and row template do not have the same number of cells. '
                     'Ignoring template (all cells will be stored as text).'
                 )
-                header_and_row_template = [None, None]
-            break
-    else:
-        header_and_row_template = [None] + (header_and_row_template or [None])
-    return tuple(header_and_row_template)
+                return None, None
+            return header_tree, row_template_tree
+
+    # There were only single row, so it's not header, it's a row template
+    return None, header_tree
+
+
+def get_elements_from_template(openxml_sheet):
+    tree = ETree.fromstring(openxml_sheet)
+    rm_namespace(tree)
+
+    header, row_template = _get_header_and_row_template(tree)
+
+    return header, row_template
 
 
 def get_default_template(row_values, reset_memory=False):

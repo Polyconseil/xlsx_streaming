@@ -17,7 +17,7 @@ class TestOpenXML(unittest.TestCase):
         self.assertEqual(next(element_iter).tag, 'outlinePr')
 
     def test_get_header_and_row_template(self):
-        header, template = render.get_header_and_row_template(gen_xlsx_sheet())  # pylint: disable=unbalanced-tuple-unpacking
+        header, template = render.get_elements_from_template(gen_xlsx_sheet())  # pylint: disable=unbalanced-tuple-unpacking
         self.assertTrue(header is None)
         self.assertEqual(template.tag, 'row')
         self.assertEqual(template.get('r'), '1')
@@ -152,6 +152,9 @@ class TestOpenXML(unittest.TestCase):
         stream = next(xlsx_doc)
         document += stream
         self.assertTrue(stream.startswith(b'<worksheet'))
+        stream = next(xlsx_doc)
+        document += stream
+        self.assertTrue(stream.startswith(b'<sheetData'))
         stream = next(xlsx_doc)
         document += stream
         self.assertTrue(stream.startswith(b'<row'))
