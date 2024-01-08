@@ -32,9 +32,12 @@ def render_worksheet(rows_batches, openxml_sheet_string, encoding='utf-8'):
             rows_batches (iterable): each element is a list of lists containing the row values
             openxml_sheet_string (str): a template for the final sheet containing the header and an example row
     """
-    header_tree, row_template = get_elements_from_template(openxml_sheet_string)
+    header_tree, views, row_template = get_elements_from_template(openxml_sheet_string)
 
     yield f'<worksheet xmlns="{OPENXML_NS}" xmlns:r="{OPENXML_NS_R}">\n'.encode(encoding)
+
+    if views is not None:
+        yield ETree.tostring(views, encoding=encoding)
 
     yield '<sheetData>\n'.encode(encoding)
 
@@ -289,13 +292,38 @@ def _get_header_and_row_template(tree):
     return None, header_tree
 
 
+def _get_sheet_views(tree):
+    """
+        Extract sheet views (potentially None) from the provided tree
+        args:
+            tree (ElementTree.Element): root element of the template
+        return (ElementTree.Element):
+            Constructed sheetViews ElementTree.Element object
+    """
+    pane = tree.find('sheetViews/sheetView/pane')
+
+    # Currently we only support panes with fronzen state
+    if pane is None or pane.get('state') != 'frozen':
+        return None
+
+    sheet_views = ETree.Element('sheetViews')
+    sheet_view = ETree.Element('sheetView', {'workbookViewId': '0'})
+    sheet_views.append(sheet_view)
+    pane = ETree.Element('pane', pane.attrib)
+    sheet_view.append(pane)
+
+    return sheet_views
+
+
 def get_elements_from_template(openxml_sheet):
     tree = ETree.fromstring(openxml_sheet)
     rm_namespace(tree)
 
     header, row_template = _get_header_and_row_template(tree)
 
-    return header, row_template
+    views = _get_sheet_views(tree)
+
+    return header, views, row_template
 
 
 def get_default_template(row_values, reset_memory=False):

@@ -3,6 +3,8 @@
 
 - Add support for Python 3.10 & 3.11 & 3.12
 - Drop support for Python 3.6 & 3.7
+- If provided template contains ``sheetViews`` with a ``pane`` element, this
+  element will now be copied to the resulting Excel document.
 
 
 1.1.0 (2021-06-23)

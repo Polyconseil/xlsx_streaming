@@ -16,9 +16,10 @@ class TestOpenXML(unittest.TestCase):
         self.assertEqual(next(element_iter).tag, 'sheetPr')
         self.assertEqual(next(element_iter).tag, 'outlinePr')
 
-    def test_get_header_and_row_template(self):
-        header, template = render.get_elements_from_template(gen_xlsx_sheet())  # pylint: disable=unbalanced-tuple-unpacking
+    def test_get_elements_from_template(self):
+        header, views, template = render.get_elements_from_template(gen_xlsx_sheet())  # pylint: disable=unbalanced-tuple-unpacking
         self.assertTrue(header is None)
+        self.assertTrue(views is None)
         self.assertEqual(template.tag, 'row')
         self.assertEqual(template.get('r'), '1')
         element_iter = template.iter()
@@ -26,6 +27,20 @@ class TestOpenXML(unittest.TestCase):
         child = next(element_iter)
         self.assertEqual(child.tag, 'c')
         self.assertEqual(child.get('r'), 'A1')
+
+    def test_views_from_template(self):
+        header, views, _ = render.get_elements_from_template(
+            gen_xlsx_sheet(with_header=True, with_views=True)
+        )
+        self.assertTrue(header is not None)
+        self.assertTrue(views is not None)
+        self.assertEqual(views.tag, 'sheetViews')
+        self.assertEqual(len(views), 1)
+        self.assertEqual(len(views[0]), 1)
+        self.assertEqual(views[0][0].tag, 'pane')
+        self.assertEqual(views[0][0].get('xSplit'), None)
+        self.assertEqual(views[0][0].get('ySplit'), '1')
+        self.assertEqual(views[0][0].get('state'), 'frozen')
 
     def test_get_column(self):
         self.assertEqual(render.get_column(ETree.Element('c', r='A1')), 'A')
