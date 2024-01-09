@@ -1,7 +1,9 @@
 docutils
 openpyxl
 pylint
+pytest
 pytz
 readme_renderer
+setuptools  # needed for docs build (conf.py)
 sphinx
 sphinx-rtd-theme

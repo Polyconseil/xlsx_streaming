@@ -11,7 +11,7 @@ docs:
 	sphinx-build -v -a -b html -d docs/_build/doctrees/ docs/ docs/_build/xlsx_streamingdoc/
 
 test:
-	python setup.py test
+	pytest -v -Wdefault::DeprecationWarning
 
 quality:
 	python setup.py check --strict --metadata --restructuredtext
