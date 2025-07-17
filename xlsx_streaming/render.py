@@ -152,6 +152,24 @@ def _update_numeric_cell(cell, value):
     next(child for child in cell if child.tag == 'v').text = cell_text
 
 
+def escape(value):
+    # https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/d34ae755-c53f-4a44-a363-c6dd3ee018a4
+    # https://www.w3.org/TR/2008/REC-xml-20081126/#charsets
+    # Do not escape newline (0x000A) or tab (0x0009) characters
+    CHAR_REGEX = re.compile(r"[\x01-\x08\x0B-\x1F\uD800-\uDFFF\uFFFE\uFFFF]")
+
+    def _sub(match):
+        """
+        Callback to escape chars
+        """
+        return f"_x{ord(match.group(0)):0>4x}_"
+
+    if "_x" in value:
+        # handle strings that look like escaped characters by escaping the underscore
+        value = re.sub(r"_x[0-9a-fA-F]{4}_", r"_x005F\g<0>", value)
+    return CHAR_REGEX.sub(_sub, value)
+
+
 def _update_text_cell(cell, value):
     if cell.get('t') != 'inlineStr':
         # write all the strings 'inline' to avoid messing up with
@@ -160,7 +178,7 @@ def _update_text_cell(cell, value):
         cell.set('t', 'inlineStr')
         ETree.SubElement(ETree.SubElement(cell, 'is'), 't')
     updated_text = '' if value is None else str(value)
-    next(child for child in cell.iter() if child.tag == 't').text = updated_text
+    next(child for child in cell.iter() if child.tag == 't').text = escape(updated_text)
 
 
 def datetime_to_excel_datetime(dt_obj, date_1904=False):

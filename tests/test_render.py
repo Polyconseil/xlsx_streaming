@@ -143,6 +143,17 @@ class TestOpenXML(unittest.TestCase):
             '</row>'.encode()
         )
 
+    def test_render_row_invalid_xml_char(self):
+        row = render.render_row(["foo\x02bar", "_x0002_"], None, 2)
+        ETree.fromstring(row)
+        self.assertEqual(
+            row,
+            '<row r="2">'
+            '<c r="A2" t="inlineStr"><is><t>foo_x0002_bar</t></is></c>'
+            '<c r="B2" t="inlineStr"><is><t>_x005F_x0002_</t></is></c>'
+            "</row>".encode(),
+        )
+
     def test_render_rows(self):
         template_row = self.gen_row()
         rows, lines = render.render_rows([[42, 'Noé!>', 24], [18, '<éON', 21]], template_row, 1)

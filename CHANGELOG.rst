@@ -1,7 +1,8 @@
 2.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix handling of invalid XML characters according to OOM specification
+  (e.g. ``\x02`` will be escaped as ``_x0002_``).
 
 
 2.0.0 (2024-01-15)
