@@ -1,4 +1,4 @@
-2.0.1 (unreleased)
+2.0.1 (2025-07-30)
 ------------------
 
 - Fix handling of invalid XML characters according to OOM specification
